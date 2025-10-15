@@ -1,0 +1,127 @@
+# =============================================================================
+# Amazon Connect Analytics Data Lake Consumer - Configuration Example
+# =============================================================================
+# Copy this file to terraform.tfvars and update the values as needed
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# CROSS-ACCOUNT CONFIGURATION
+# -----------------------------------------------------------------------------
+
+# AWS Account ID of the producer (data owner)
+producer_account_id = "502851453563"
+
+# AWS Account ID of the consumer (data analyst)
+# Leave empty to auto-detect from current AWS credentials
+consumer_account_id = ""
+
+# AWS region configuration
+producer_region = "ap-southeast-2"
+consumer_region = "ap-southeast-2"
+
+# -----------------------------------------------------------------------------
+# PROJECT CONFIGURATION
+# -----------------------------------------------------------------------------
+
+# Project name used for resource naming
+project_name = "connect-analytics"
+
+# Environment tag (dev, test, staging, prod)
+environment = "poc"
+
+# -----------------------------------------------------------------------------
+# AMAZON CONNECT DATA CONFIGURATION
+# -----------------------------------------------------------------------------
+
+# List of Amazon Connect tables to create Resource Links for
+connect_tables = [
+  "users",
+  "contacts", 
+  "agent_metrics",
+  "queue_metrics"
+]
+
+# Name of the producer Glue database containing Amazon Connect data
+producer_database_name = "connect_analytics"
+
+# Name of the consumer Glue database for Resource Links
+consumer_database_name = "connect_analytics_consumer"
+
+# -----------------------------------------------------------------------------
+# LAKE FORMATION CONFIGURATION
+# -----------------------------------------------------------------------------
+
+# Lake Formation LF-Tag key for data classification
+lf_tag_key = "department"
+
+# Lake Formation LF-Tag values for data classification
+lf_tag_values = ["Connect"]
+
+# Enable Lake Formation configuration
+enable_lake_formation = true
+
+# Enable AWS Glue Resource Links for cross-account table access
+enable_resource_links = true
+
+# -----------------------------------------------------------------------------
+# LAMBDA CONFIGURATION
+# -----------------------------------------------------------------------------
+
+# Enable Lambda function for automated users export
+enable_lambda_export = true
+
+# Cron schedule for Lambda function execution
+# Default: Daily at 2 AM UTC
+lambda_schedule_expression = "cron(0 2 * * ? *)"
+
+# -----------------------------------------------------------------------------
+# S3 CONFIGURATION
+# -----------------------------------------------------------------------------
+
+# Name of the S3 bucket for Athena query results
+# Leave empty to auto-generate unique name
+athena_results_bucket_name = ""
+
+# Name of the S3 bucket for Lambda code
+# Leave empty to auto-generate unique name
+lambda_bucket_name = ""
+
+# -----------------------------------------------------------------------------
+# IAM CONFIGURATION
+# -----------------------------------------------------------------------------
+
+# Name of the IAM role for data access
+iam_role_name = "connect_analytics_query_role"
+
+# Name of the Athena workgroup
+athena_workgroup_name = "connect_analytics_workgroup"
+
+# -----------------------------------------------------------------------------
+# ADVANCED CONFIGURATION (Optional)
+# -----------------------------------------------------------------------------
+
+# Uncomment and modify these if you need custom names
+
+# Custom IAM role name
+# iam_role_name = "my_custom_analytics_role"
+
+# Custom Athena workgroup name
+# athena_workgroup_name = "my_custom_workgroup"
+
+# Custom database names
+# producer_database_name = "my_producer_db"
+# consumer_database_name = "my_consumer_db"
+
+# Custom LF-Tag configuration
+# lf_tag_key = "my_custom_tag"
+# lf_tag_values = ["MyValue", "AnotherValue"]
+
+# -----------------------------------------------------------------------------
+# NOTES
+# -----------------------------------------------------------------------------
+
+# 1. Ensure RAM share is accepted in producer account before running terraform apply
+# 2. Resource Links are now automatically created by Terraform (no manual setup needed)
+# 3. Test Athena queries using the provided validation commands
+# 4. Monitor CloudWatch logs for Lambda function (if enabled)
+# 5. All infrastructure is now managed 100% via Terraform - no CLI dependencies
