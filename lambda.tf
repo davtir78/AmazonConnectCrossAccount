@@ -29,7 +29,7 @@ resource "aws_lambda_function" "users_export" {
       REGION           = var.consumer_region
       OUTPUT_BUCKET    = aws_s3_bucket.athena_results.id
       OUTPUT_PREFIX    = "users-export"
-      TABLE_NAME       = "users_resource_link"
+      TABLE_NAME       = "users_link"
     }
   }
 
@@ -55,7 +55,7 @@ resource "aws_lambda_function" "users_export" {
 
 resource "aws_iam_role" "lambda_role" {
   count = var.enable_lambda_export ? 1 : 0
-  name  = "${var.project_name}-lambda-role"
+  name  = "${var.project_name}-lambda-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -214,14 +214,32 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "lambda_bucket" {
 #------------------------------------------------------------------------------
 
 data "archive_file" "lambda_zip" {
-  count   = var.enable_lambda_export ? 1 : 0
-  type    = "zip"
-  source_file = local_file.lambda_function[0].filename
+  count       = var.enable_lambda_export ? 1 : 0
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_package"
   output_path = "${path.module}/lambda_users_export.zip"
+  
+  depends_on = [
+    null_resource.lambda_package_dir
+  ]
+}
+
+# Create directory for Lambda package
+resource "null_resource" "lambda_package_dir" {
+  count = var.enable_lambda_export ? 1 : 0
+  
+  provisioner "local-exec" {
+    command     = "if not exist lambda_package mkdir lambda_package && copy /Y lambda_function.py lambda_package\\"
+    interpreter = ["cmd", "/C"]
+  }
   
   depends_on = [
     local_file.lambda_function
   ]
+  
+  triggers = {
+    lambda_code = local_file.lambda_function[0].content
+  }
 }
 
 resource "aws_s3_object" "lambda_code" {
@@ -271,16 +289,17 @@ def lambda_handler(event, context):
         date_partition = current_date.strftime('%Y/%m/%d')
         output_key = f"{output_prefix}/{date_partition}/users_data.json"
         
-        # Simple query for testing
+        # Simple query for testing - use fully qualified table name
         query = f"""
         SELECT 
             user_id,
-            username,
-            email,
-            phone_number,
-            hire_date,
-            termination_date
-        FROM {table_name}
+            agent_username,
+            agent_email,
+            first_name,
+            last_name,
+            mobile,
+            is_active
+        FROM {athena_database}.{table_name}
         WHERE 1=1
         LIMIT 100
         """
@@ -323,9 +342,12 @@ def lambda_handler(event, context):
         
         # Process results
         users_data = []
-        columns = [col['Label'] for col in results_response['ResultSet']['Rows'][0]['Data']]
         
-        for row in results_response['ResultSet']['Rows'][1:]:  # Skip header row
+        # Extract column names from metadata
+        columns = [col['Name'] for col in results_response['ResultSet']['ResultSetMetadata']['ColumnInfo']]
+        
+        # Process data rows (skip header row if present)
+        for row in results_response['ResultSet']['Rows'][1:]:
             row_data = {}
             for i, col in enumerate(row['Data']):
                 if i < len(columns):

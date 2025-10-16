@@ -15,13 +15,18 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
+# Configuration - Update these values to match your environment
 CONSUMER_DATABASE="connect_analytics_consumer"
-PRODUCER_ACCOUNT="502851453563"
-PRODUCER_DATABASE="connect_analytics"
+PRODUCER_ACCOUNT=""  # Will be read from terraform output
+PRODUCER_DATABASE="connect_datalake"
 REGION="ap-southeast-2"
 IAM_ROLE="connect_analytics_query_role"
-ATHENA_WORKGROUP="connect_analytics_workgroup" # Updated to remove _poc suffix
+ATHENA_WORKGROUP="connect_analytics_workgroup"
+
+# Get producer account ID from terraform output if not set
+if [ -z "$PRODUCER_ACCOUNT" ]; then
+  PRODUCER_ACCOUNT=$(terraform output -raw producer_account_info 2>/dev/null | grep -oP '"account_id"\s*=\s*"\K[^"]+' || echo "")
+fi
 
 # Counters
 PASSED=0

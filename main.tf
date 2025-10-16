@@ -15,6 +15,10 @@ terraform {
       source  = "hashicorp/null"
       version = "~> 3.2"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.9"
+    }
   }
 }
 
@@ -138,107 +142,10 @@ resource "aws_iam_role" "connect_analytics_query_role" {
   })
 }
 
-# Specific policy for Athena access
-resource "aws_iam_policy" "athena_access_policy" {
-  provider = aws.consumer
-  name     = "${var.project_name}_athena_access_policy"
-  description = "Policy for Athena query access to Amazon Connect data"
+# Note: IAM policies are now managed in lakeformation_permissions.tf
+# This provides better organization and avoids policy conflicts
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "athena:StartQueryExecution",
-          "athena:GetQueryExecution",
-          "athena:GetQueryResults",
-          "athena:GetWorkGroup",
-          "athena:ListWorkGroups",
-          "athena:ListQueryExecutions"
-        ]
-        Resource = [
-          "arn:aws:athena:${var.consumer_region}:${local.consumer_account_id}:workgroup/${var.athena_workgroup_name}",
-          "arn:aws:athena:${var.consumer_region}:${local.consumer_account_id}:workgroup/primary"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "glue:GetDatabase",
-          "glue:GetTable",
-          "glue:GetTables",
-          "glue:GetPartition",
-          "glue:GetPartitions"
-        ]
-        Resource = [
-          "arn:aws:glue:${var.consumer_region}:${local.consumer_account_id}:catalog",
-          "arn:aws:glue:${var.consumer_region}:${local.consumer_account_id}:database/${var.consumer_database_name}",
-          "arn:aws:glue:${var.consumer_region}:${local.consumer_account_id}:table/${var.consumer_database_name}/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          "arn:aws:s3:::${local.athena_results_bucket}",
-          "arn:aws:s3:::${local.athena_results_bucket}/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "lakeformation:GetDataAccess"
-        ]
-        Resource = "*"
-        Condition = {
-          StringEquals = {
-            "lakeformation:TagCondition" = jsonencode([
-              {
-                TagKey    = var.lf_tag_key
-                TagValues = var.lf_tag_values
-              }
-            ])
-          }
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "athena_access_attachment" {
-  provider   = aws.consumer
-  role       = aws_iam_role.connect_analytics_query_role.name
-  policy_arn = aws_iam_policy.athena_access_policy.arn
-}
-
-# Lambda IAM Role (for users export function)
-resource "aws_iam_role" "connect_analytics_lambda_role" {
-  count    = var.enable_lambda_export ? 1 : 0
-  provider = aws.consumer
-  name     = "${var.project_name}-lambda-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  tags = merge(local.common_tags, {
-    Name = "Amazon Connect Analytics Lambda Role"
-  })
-}
+# Lambda IAM Role is now defined in lambda.tf to avoid duplication
 
 # =============================================================================
 # GLUE DATABASE
@@ -344,17 +251,16 @@ output "resource_links_info" {
 output "next_steps" {
   description = "Next steps for complete setup"
   value = var.enable_resource_links ? [
-    "1. Ensure RAM share is accepted in producer account",
-    "2. Resource Links are automatically created by Terraform",
+    "1. Resource Links are automatically created by Terraform (no RAM needed)",
+    "2. Lake Formation permissions are applied automatically",
     "3. Test Athena queries using the workgroup",
     "4. Verify data access with the IAM role",
     "5. Test Lambda function if enabled"
   ] : [
-    "1. Ensure RAM share is accepted in producer account",
-    "2. Enable Resource Links in configuration",
-    "3. Run terraform apply again",
-    "4. Test Athena queries using the workgroup",
-    "5. Verify data access with the IAM role"
+    "1. Enable Resource Links in configuration",
+    "2. Run terraform apply again",
+    "3. Test Athena queries using the workgroup",
+    "4. Verify data access with the IAM role"
   ]
 }
 

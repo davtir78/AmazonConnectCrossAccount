@@ -3,9 +3,8 @@
 # =============================================================================
 
 variable "producer_account_id" {
-  description = "AWS Account ID of the producer (data owner)"
+  description = "AWS Account ID of the producer account (where Amazon Connect data resides)"
   type        = string
-  default     = "502851453563"
 }
 
 variable "consumer_account_id" {
@@ -50,10 +49,53 @@ variable "connect_tables" {
   description = "List of Amazon Connect tables to create Resource Links for"
   type        = list(string)
   default = [
-    "users",
-    "contacts", 
-    "agent_metrics",
-    "queue_metrics"
+    # Agent and Queue Statistics
+    "agent_queue_statistic_record",
+    "agent_statistic_record",
+    "agent_metrics",  # Keep existing
+    "contact_statistic_record",
+    "queue_metrics",  # Keep existing
+    
+    # Contact Records
+    "contacts_record",
+    "contacts",  # Keep existing
+    "contact_flow_events",
+    "contact_evaluation_record",
+    
+    # Contact Lens
+    "contact_lens_conversational_analytics",
+    
+    # Bot Analytics
+    "bot_conversations",
+    "bot_intents",
+    "bot_slots",
+    
+    # Configuration
+    "agent_hierarchy_groups",
+    "routing_profiles",
+    "users",  # Keep existing
+    
+    # Forecasting
+    "forecast_groups",
+    "long_term_forecasts",
+    "short_term_forecasts",
+    "intraday_forecasts",
+    
+    # Outbound Campaigns
+    "outbound_campaign_events",
+    
+    # Staff Scheduling
+    "staff_scheduling_profile",
+    "shift_activities",
+    "shift_profiles",
+    "staffing_groups",
+    "staffing_group_forecast_groups",
+    "staffing_group_supervisors",
+    "staff_shifts",
+    "staff_shift_activities",
+    "staff_timeoff_balance_changes",
+    "staff_timeoffs",
+    "staff_timeoff_intervals"
   ]
 }
 

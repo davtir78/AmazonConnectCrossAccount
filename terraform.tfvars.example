@@ -9,11 +9,12 @@
 # -----------------------------------------------------------------------------
 
 # AWS Account ID of the producer (data owner)
-producer_account_id = "502851453563"
+# Replace with your producer account ID
+producer_account_id = "111111111111"
 
 # AWS Account ID of the consumer (data analyst)
-# Leave empty to auto-detect from current AWS credentials
-consumer_account_id = ""
+# Replace with your consumer account ID
+consumer_account_id = "222222222222"
 
 # AWS region configuration
 producer_region = "ap-southeast-2"
