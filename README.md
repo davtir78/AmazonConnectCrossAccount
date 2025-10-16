@@ -222,9 +222,6 @@ aws athena start-query-execution \
 │
 ├── recreate_resource_links.sh          # Bash script for resource links
 │
-├── TERRAFORM_LIMITATION.md             # Technical documentation on Terraform limitation
-├── CROSS_ACCOUNT_SOLUTION.md           # Architecture and solution guide
-│
 └── verify_deployment.sh                # Deployment verification script
 ```
 
@@ -279,19 +276,6 @@ aws athena start-query-execution \
   - Verifies schema population
   - Tests Athena connectivity
 
-#### Documentation
-
-- **`TERRAFORM_LIMITATION.md`** - Deep dive into the technical challenge:
-  - Why Terraform can't create resource links with schemas
-  - Attempted workarounds
-  - Final solution explanation
-  - Comparison of approaches
-
-- **`CROSS_ACCOUNT_SOLUTION.md`** - Complete architecture guide:
-  - Prerequisites and setup
-  - Step-by-step deployment
-  - Troubleshooting guide
-  - Best practices
 
 ## ⚙️ Configuration
 
@@ -438,7 +422,6 @@ When you run `terraform apply`:
 ✅ **Production Ready** - Tested and reliable
 ✅ **CI/CD Compatible** - Works in automated pipelines
 
-See [TERRAFORM_LIMITATION.md](TERRAFORM_LIMITATION.md) for technical details.
 
 ## 🚀 Deployment
 
@@ -636,87 +619,7 @@ aws iam get-user
 terraform apply 2>&1 | tee terraform.log
 ```
 
-## 💰 Cost Considerations
 
-### Estimated Monthly Costs (US East 1)
-
-| Service | Usage | Estimated Cost |
-|---------|-------|----------------|
-| AWS Glue Data Catalog | 32 tables | Free (first 1M objects) |
-| Amazon Athena | 100 GB scanned/month | $0.50 |
-| S3 Storage | 10 GB query results | $0.23 |
-| Lambda | 30 executions/month | Free (first 1M requests) |
-| CloudWatch Logs | 1 GB/month | $0.50 |
-| **Total** | | **~$1.23/month** |
-
-### Cost Optimization Tips
-
-1. **Partition Your Data** - Use date partitions to reduce Athena scan costs
-2. **Compress Results** - Enable Athena result compression
-3. **Limit Query Scope** - Use WHERE clauses to scan less data
-4. **Clean Up Old Results** - Set S3 lifecycle policies
-5. **Monitor Usage** - Use AWS Cost Explorer
-
-## 🔒 Security
-
-### Credentials Protection
-
-✅ **terraform.tfvars** - Gitignored, contains account IDs
-✅ **AWS credentials** - Never committed to Git
-✅ **.gitignore** - Comprehensive protection rules
-✅ **terraform.tfvars.example** - Template with placeholders only
-
-### IAM Permissions
-
-The solution creates minimal IAM roles with least-privilege access:
-
-- **Query Role** - Read-only access to Glue catalog and S3 results
-- **Lambda Role** - Athena execution and S3 write permissions
-
-### Lake Formation
-
-Fine-grained access control via LF-Tags:
-- Database-level permissions
-- Table-level permissions
-- Column-level filtering (optional)
-
-### Best Practices
-
-1. **Use IAM Roles** - Don't use long-term credentials
-2. **Enable CloudTrail** - Audit all API calls
-3. **Encrypt at Rest** - S3 buckets use SSE-S3 encryption
-4. **Encrypt in Transit** - All AWS API calls use HTTPS
-5. **Regular Reviews** - Audit permissions quarterly
-
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-### Development Setup
-
-```bash
-# Clone your fork
-git clone <your-fork-url>
-cd amazon-connect-cross-account
-
-# Create a branch
-git checkout -b feature/your-feature
-
-# Make changes and test
-terraform plan
-terraform apply
-
-# Commit and push
-git add .
-git commit -m "Description of changes"
-git push origin feature/your-feature
-```
 
 ## 📄 License
 
@@ -729,19 +632,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Amazon Connect Analytics Data Lake](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-analytics-data-lake.html)
 - [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 
-## 🆘 Support
-
-For issues and questions:
-
-1. Check [TERRAFORM_LIMITATION.md](TERRAFORM_LIMITATION.md) for technical details
-2. Review [CROSS_ACCOUNT_SOLUTION.md](CROSS_ACCOUNT_SOLUTION.md) for architecture
-3. Search existing GitHub issues
-4. Create a new issue with:
-   - Terraform version
-   - AWS CLI version
-   - Error messages
-   - Steps to reproduce
 
 ---
 
-**Made with ❤️ for the Amazon Connect community**

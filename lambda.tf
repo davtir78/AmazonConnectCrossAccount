@@ -16,7 +16,7 @@ resource "aws_lambda_function" "users_export" {
   handler       = "lambda_function.lambda_handler"
   timeout       = 300
   memory_size   = 256
-
+ 
   s3_bucket = aws_s3_bucket.lambda_bucket[0].id
   s3_key    = aws_s3_object.lambda_code[0].id
 
@@ -45,7 +45,8 @@ resource "aws_lambda_function" "users_export" {
     aws_iam_role_policy_attachment.lambda_logs[0],
     aws_iam_role_policy_attachment.lambda_athena[0],
     aws_iam_role_policy_attachment.lambda_s3[0],
-    aws_cloudwatch_log_group.lambda_logs[0]
+    aws_cloudwatch_log_group.lambda_logs[0],
+    null_resource.lambda_permissions[0]
   ]
 }
 
