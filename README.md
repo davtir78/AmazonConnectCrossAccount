@@ -541,6 +541,106 @@ If you need to recreate resource links manually:
 bash recreate_resource_links.sh
 ```
 
+## 📊 Amazon Connect Analytics Tables Reference
+
+### Table Metadata Export
+
+This project includes a comprehensive metadata export script that documents all Amazon Connect Analytics tables available through the resource links.
+
+### Available Tables by Category:
+
+**Agent & Queue Statistics (5 tables):**
+- `agent_queue_statistic_record` - Agent queue performance metrics
+- `agent_statistic_record` - Individual agent statistics
+- `agent_metrics` - Agent performance metrics
+- `contact_statistic_record` - Contact-level statistics
+- `queue_metrics` - Queue performance metrics
+
+**Contact Records (4 tables):**
+- `contacts_record` - Contact interaction records
+- `contacts` - Contact details and metadata
+- `contact_flow_events` - Contact flow execution events
+- `contact_evaluation_record` - Contact evaluation data
+
+**Contact Lens (1 table):**
+- `contact_lens_conversational_analytics` - Conversation analytics and insights
+
+**Bot Analytics (3 tables):**
+- `bot_conversations` - Bot interaction data
+- `bot_intents` - Bot intent recognition data
+- `bot_slots` - Bot slot filling data
+
+**Configuration (3 tables):**
+- `agent_hierarchy_groups` - Agent hierarchy structure
+- `routing_profiles` - Routing profile configurations
+- `users` - User account information
+
+**Forecasting (4 tables):**
+- `forecast_groups` - Forecast group definitions
+- `long_term_forecasts` - Long-term forecasting data
+- `short_term_forecasts` - Short-term forecasting data
+- `intraday_forecasts` - Intraday forecasting data
+
+**Outbound Campaigns (1 table):**
+- `outbound_campaign_events` - Outbound campaign event data
+
+**Staff Scheduling (11 tables):**
+- `staff_scheduling_profile` - Staff scheduling configurations
+- `shift_activities` - Shift activity definitions
+- `shift_profiles` - Shift profile configurations
+- `staffing_groups` - Staffing group definitions
+- `staffing_group_forecast_groups` - Staffing-forecast mappings
+- `staffing_group_supervisors` - Staffing supervisor assignments
+- `staff_shifts` - Staff shift assignments
+- `staff_shift_activities` - Staff shift activities
+- `staff_timeoff_balance_changes` - Time-off balance changes
+- `staff_timeoffs` - Time-off requests
+- `staff_timeoff_intervals` - Time-off time intervals
+
+### Export Complete Table Metadata
+
+To export comprehensive metadata for all tables (including column names, data types, descriptions, and partition information):
+
+```bash
+# Run the metadata export script
+./export_table_metadata.sh
+
+# This will create:
+# - amazon_connect_tables_metadata.csv (complete metadata)
+# - Console output with progress and summary
+```
+
+**Script Features:**
+- Exports metadata for all 32 Amazon Connect Analytics tables
+- Includes table and column descriptions where available
+- Identifies partition keys and data types
+- Works with resource links in the consumer account
+- Provides progress indicators and error handling
+- Generates CSV output suitable for documentation
+
+**Output File:** `amazon_connect_tables_metadata.csv`
+
+**CSV Columns:**
+- Table Name - Source table name
+- Column Name - Column identifier
+- Data Type - Column data type (string, int, timestamp, etc.)
+- Description - Column description (if available)
+- Is Partition Key - Whether column is used for partitioning
+- Table Location - S3 path for table data
+- Table Type - Table type (EXTERNAL, MANAGED, etc.)
+- Last Updated - Last modification timestamp
+- Table Description - Table-level description
+
+**Requirements:**
+- AWS CLI configured with consumer account access
+- Resource links must be created (via Terraform deployment)
+- Optional: `jq` for better JSON parsing (script works without it)
+
+**Customization:**
+- Edit the `TABLES` array in `export_table_metadata.sh` to add/remove tables
+- Modify `CONSUMER_DATABASE` and `REGION` variables if needed
+- Change output filename by updating `OUTPUT_FILE` variable
+
 ## 📊 Usage
 
 ### Query Data with Athena
