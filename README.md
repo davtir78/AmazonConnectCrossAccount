@@ -6,7 +6,13 @@ A complete Terraform solution for setting up cross-account access to Amazon Conn
 
 **This project requires ONE manual step after Terraform deployment:**
 
-If you enable the Lambda function (`enable_lambda_export = true`), you must manually grant Lake Formation permissions via AWS Console. This is a **5-minute one-time setup** that cannot be automated due to AWS Lake Formation limitations.
+If you enable the Lambda function (`enable_lambda_export = true`), you must manually grant Lake Formation permissions via AWS Console using the "Grant on Target" feature. This is a **5-minute one-time setup** that cannot be automated via CLI or Terraform due to AWS Lake Formation limitations.
+
+**Why Manual Step is Required:**
+- CLI can grant DESCRIBE permission on resource links ✅
+- CLI CANNOT grant SELECT permission on target tables ❌
+- Console "Grant on Target" is the only way to grant SELECT on cross-account tables
+- Lambda function requires both DESCRIBE (automated) + SELECT (manual)
 
 **Options:**
 1. **Enable Lambda** - Follow [setup_lambda_permissions.md](setup_lambda_permissions.md) after deployment (5 minutes)
@@ -634,4 +640,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 
 ---
-
