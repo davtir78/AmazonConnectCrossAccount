@@ -3,6 +3,12 @@
 # =============================================================================
 # Direct resource link creation without RAM shares - based on successful manual setup
 # Key insight: Resource links work directly with proper Lake Formation permissions
+#
+# ARCHITECTURAL DECISION:
+# - Resource Links are virtual tables that point to producer account tables
+# - They enable cross-account access without data duplication
+# - Lake Formation permissions control access to these virtual tables
+# - No RAM shares needed - Resource Links work directly with LF permissions
 
 # -----------------------------------------------------------------------------
 # Create Resource Links for Cross-Account Table Access
@@ -11,26 +17,32 @@
 # Glue resource policy removed due to cross-account issues
 # Resource links work with Lake Formation permissions directly
 
+# TERRAFORM LIMITATION WORKAROUND:
 # NOTE: Terraform AWS provider does not support storage_descriptor with target_table
-# Resource links are created automatically using local-exec provisioner
-# See TERRAFORM_LIMITATION.md for details
+# This is a known limitation where terraform cannot create resource links with
+# storage_descriptor, which is required for automatic schema population.
+#
+# SOLUTION: Use local-exec provisioner to call AWS CLI which supports full functionality
+# See recreate_resource_links.sh for the implementation details
 
-# Automatically create resource links with storage_descriptor
+# Automatically create resource links with storage_descriptor using AWS CLI
 resource "null_resource" "resource_links_creator" {
   count = var.enable_resource_links ? 1 : 0
   
+  # Triggers ensure recreation when configuration changes
   triggers = {
-    tables_hash         = sha256(jsonencode(var.connect_tables))
-    database            = var.consumer_database_name
-    producer_database   = var.producer_database_name
+    tables_hash         = sha256(jsonencode(var.connect_tables))  # Recreate if table list changes
+    database            = var.consumer_database_name             # Recreate if consumer DB changes
+    producer_database   = var.producer_database_name             # Recreate if producer DB changes
   }
   
-  # Create resource links using bash script
+  # Create resource links using bash script that calls AWS CLI
   provisioner "local-exec" {
     command     = "bash ${path.module}/recreate_resource_links.sh"
     interpreter = ["bash", "-c"]
   }
   
+  # Ensure consumer database exists before creating resource links
   depends_on = [
     aws_glue_catalog_database.consumer_database
   ]

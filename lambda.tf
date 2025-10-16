@@ -2,11 +2,30 @@
 # AMAZON CONNECT ANALYTICS DATA LAKE CONSUMER - LAMBDA EXPORT
 #------------------------------------------------------------------------------
 # Lambda function for exporting Amazon Connect users data to S3
-#------------------------------------------------------------------------------
+#
+# LAMBDA ARCHITECTURE:
+# - Scheduled execution via EventBridge (cron-based)
+# - Queries Amazon Connect data via Athena and Resource Links
+# - Exports results to S3 in JSON format with date partitioning
+# - Handles errors gracefully with comprehensive logging
+#
+# USE CASES:
+# - Automated daily user data exports
+# - Integration with downstream systems
+# - Data archiving and backup
+# - Reporting and analytics workflows
+#
+# DEPENDENCIES:
+# - Requires Lake Formation permissions on Resource Links
+# - Needs Athena workgroup access
+# - S3 bucket for output storage
+# - IAM role with proper permissions
 
 #------------------------------------------------------------------------------
 # LAMBDA FUNCTION FOR USERS EXPORT
 #------------------------------------------------------------------------------
+# This Lambda function demonstrates how to programmatically access
+# Amazon Connect analytics data via Resource Links and Athena
 
 resource "aws_lambda_function" "users_export" {
   count         = var.enable_lambda_export ? 1 : 0

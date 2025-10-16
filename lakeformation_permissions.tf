@@ -3,17 +3,32 @@
 # =============================================================================
 # This configuration replicates the working manual setup with least-privilege approach
 # Key insights: No RAM shares needed, direct resource links with proper permissions
+#
+# LAKE FORMATION ARCHITECTURE:
+# - Lake Formation is the ONLY way to access AWS service-owned data (like Amazon Connect)
+# - Provides fine-grained access control at database, table, and column levels
+# - Uses LF-Tags for attribute-based access control
+# - Integrates with IAM for authentication and authorization
+#
+# WHY THIS APPROACH WORKS:
+# - Producer data is owned by AWS service account (not customer account)
+# - Customers cannot assume roles against AWS service accounts
+# - Lake Formation is designed specifically for this use case
+# - Resource Links + Lake Formation = secure cross-account access
 
 # -----------------------------------------------------------------------------
 # Lake Formation Data Lake Settings - Consumer Account
 # -----------------------------------------------------------------------------
 
-# Since aws-cli user is already LF admin, we'll use that to grant permissions
-# The existing admin setup will be used to create resource links
+# Lake Formation admin setup is assumed to be completed manually
+# The aws-cli user or role running Terraform needs Lake Formation admin permissions
+# This is typically done once in the AWS Console: Lake Formation > Permissions > Admin
 
 # -----------------------------------------------------------------------------
 # Enhanced IAM Policy for Lake Formation Access
 # -----------------------------------------------------------------------------
+# This policy provides the necessary permissions for the IAM role to interact
+# with Lake Formation, Glue, Athena, and S3 services for data access
 
 resource "aws_iam_policy" "lake_formation_query_policy" {
   provider = aws.consumer

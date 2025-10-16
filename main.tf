@@ -3,6 +3,20 @@
 # =============================================================================
 # This Terraform configuration sets up a cross-account Amazon Connect Analytics
 # Data Lake Consumer using Lake Formation, Resource Links, and Athena.
+# 
+# ARCHITECTURE OVERVIEW:
+# - Producer Account: Contains Amazon Connect instance and data lake (owned by AWS service)
+# - Consumer Account: Accesses data via Lake Formation and Resource Links
+# - Lake Formation: Provides fine-grained access control (mandatory for AWS service data)
+# - Resource Links: Virtual tables pointing to producer account tables
+# - Athena: SQL query engine for data analysis
+# - Lambda: Optional automated data export functionality
+#
+# WHY LAKE FORMATION IS REQUIRED:
+# Alternative approaches like IAM role assumption are not possible because:
+# - Amazon Connect Analytics Data Lake infrastructure is owned by AWS service account
+# - Customers cannot access or assume roles against AWS-owned resources
+# - Lake Formation is the only supported mechanism for cross-account access
 # =============================================================================
 
 terraform {

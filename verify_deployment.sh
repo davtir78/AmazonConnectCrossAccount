@@ -1,10 +1,32 @@
 #!/bin/bash
 # =============================================================================
-# Deployment Verification Script
+# Amazon Connect Analytics Data Lake Consumer - Deployment Verification Script
 # =============================================================================
+# This script validates the complete deployment and provides troubleshooting guidance
+#
+# VERIFICATION SCOPE:
+# 1. Terraform deployment status and outputs
+# 2. Resource Links creation and schema population
+# 3. Lake Formation permissions and access
+# 4. Athena query functionality
+# 5. IAM role permissions
+# 6. S3 bucket configuration
+# 7. Lambda function deployment (if enabled)
+# 8. Cross-account configuration validation
+#
+# USAGE:
+# - Run after Terraform apply to verify deployment success
+# - Use for troubleshooting deployment issues
+# - Provides detailed feedback on each component
+#
+# EXPECTED OUTCOMES:
+# - All tests should pass for a successful deployment
+# - Warnings indicate non-critical issues that may need attention
+# - Failures indicate critical problems that must be resolved
+
+# Deployment Verification Script
 # This script verifies that all resources are properly deployed and configured
 # for the 100% Terraform-managed Amazon Connect Analytics solution
-# =============================================================================
 
 set -e
 

@@ -1,16 +1,22 @@
 # =============================================================================
 # CROSS-ACCOUNT CONFIGURATION VARIABLES
 # =============================================================================
+# These variables define the cross-account relationship between the producer
+# (Amazon Connect data owner) and consumer (data analyst) accounts.
 
 variable "producer_account_id" {
   description = "AWS Account ID of the producer account (where Amazon Connect data resides)"
   type        = string
+  # Example: "502851453563"
+  # This account contains the Amazon Connect instance and data lake
 }
 
 variable "consumer_account_id" {
   description = "AWS Account ID of the consumer (data analyst)"
   type        = string
   default     = ""
+  # If empty, will auto-detect from current AWS credentials
+  # This account will access the data via Lake Formation and Resource Links
 }
 
 variable "producer_region" {

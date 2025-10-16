@@ -1,4 +1,25 @@
 #!/bin/bash
+# =============================================================================
+# Resource Links Creation Script
+# =============================================================================
+# This script creates AWS Glue Resource Links for cross-account table access
+# It handles the storage_descriptor requirement that Terraform cannot manage
+#
+# WHY THIS SCRIPT IS NEEDED:
+# - Terraform AWS provider doesn't support storage_descriptor with target_table
+# - AWS CLI supports full resource link creation with schema population
+# - Storage descriptor is required for automatic schema retrieval from producer
+#
+# SCRIPT FUNCTIONALITY:
+# 1. Deletes existing resource links (clean slate approach)
+# 2. Creates new resource links with storage_descriptor
+# 3. Points to producer account tables via TargetTable configuration
+# 4. Triggers AWS Glue to auto-populate schemas via Lake Formation share
+#
+# USAGE:
+# - Called automatically by Terraform during apply
+# - Can be run manually for troubleshooting or updates
+# - Requires AWS CLI with proper Lake Formation permissions
 
 # Script to recreate all resource links with storage_descriptor
 # This triggers AWS Glue to auto-populate schemas via RAM/Lake Formation share
