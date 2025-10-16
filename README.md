@@ -6,21 +6,71 @@ A complete Terraform solution for setting up cross-account access to Amazon Conn
 
 ## ⚠️ Important: Manual Steps Required
 
-**This project requires ONE manual step after Terraform deployment:**
+**This project achieves ~80% automation with Terraform, but requires some manual steps due to AWS service limitations:**
 
-If you enable the Lambda function (`enable_lambda_export = true`), you must manually grant Lake Formation permissions via AWS Console using the "Grant on Target" feature. This is a **5-minute one-time setup** that cannot be automated via CLI or Terraform due to AWS Lake Formation limitations.
+### Manual Steps Required:
 
-**Why Manual Step is Required:**
-- CLI can grant DESCRIBE permission on resource links ✅
-- CLI CANNOT grant SELECT permission on target tables ❌
-- Console "Grant on Target" is the only way to grant SELECT on cross-account tables
-- Lambda function requires both DESCRIBE (automated) + SELECT (manual)
+- **Lake Formation Admin Setup (One-time)**
+  - Grant Lake Formation admin permissions to your AWS user/role
+  - Required for Terraform to manage Lake Formation permissions
+  - Location: AWS Console → Lake Formation → Permissions → Admin
 
-**Options:**
-1. **Enable Lambda** - Follow [setup_lambda_permissions.md](setup_lambda_permissions.md) after deployment (5 minutes)
-2. **Disable Lambda** - Set `enable_lambda_export = false` for fully automated deployment (no manual steps)
+- **RAM Share Acceptance (Prerequisite)**
+  - Accept the RAM share invitation from producer account
+  - Must be done before running Terraform
+  - Location: AWS Console → RAM → Shared with me → Accept invitation
 
-**Everything else is fully automated via Terraform!**
+- **Lambda "Grant on Target" Permissions (If Lambda Enabled)**
+  - Manual Lake Formation permission grant using "Grant on Target" feature
+  - CLI can automate DESCRIBE permissions ✅
+  - CLI CANNOT automate SELECT permissions on target tables ❌
+  - Console "Grant on Target" is the only way to grant SELECT on cross-account tables
+  - Location: AWS Console → Lake Formation → Permissions → Grant → Target table
+
+### Scripts Used Due to Terraform Limitations:
+
+- **`recreate_resource_links.sh`**
+  - Required because Terraform AWS provider doesn't support `storage_descriptor` with `target_table`
+  - Creates Resource Links with storage descriptor for automatic schema population
+  - Automatically called by Terraform during `apply`
+
+- **`grant_lambda_permissions.sh`**
+  - Automates DESCRIBE permissions for Lambda role (partial solution)
+  - Cannot automate SELECT permissions due to AWS CLI limitations
+
+- **`verify_deployment.sh`**
+  - Comprehensive validation script for troubleshooting complex cross-account setup
+
+### Why These Limitations Exist:
+
+- **Terraform Provider Gaps**: AWS provider lacks support for certain Resource Link configurations
+- **AWS Service Limitations**: Lake Formation CLI cannot grant SELECT on cross-account target tables
+- **Amazon Connect Data Architecture**: Data owned by AWS service account, not customer account
+
+### Automation vs Manual Breakdown:
+
+| Component | Terraform | CLI | Console | Notes |
+|-----------|-----------|-----|---------|-------|
+| S3 Buckets | ✅ | ✅ | ✅ | Fully automated |
+| IAM Roles | ✅ | ✅ | ✅ | Fully automated |
+| Glue Database | ✅ | ✅ | ✅ | Fully automated |
+| Resource Links | ❌ | ✅ | ✅ | Script required |
+| Lake Formation DB Perms | ✅ | ✅ | ✅ | Fully automated |
+| Lake Formation Table Perms | ✅ | ✅ | ✅ | Fully automated |
+| Lambda DESCRIBE Perms | ❌ | ✅ | ✅ | Script required |
+| Lambda SELECT Perms | ❌ | ❌ | ✅ | Manual only |
+
+### Your Options:
+
+1. **Enable Lambda Function** (`enable_lambda_export = true`)
+   - Requires 5-minute manual Lake Formation setup after deployment
+   - Follow [setup_lambda_permissions.md](setup_lambda_permissions.md) for detailed steps
+
+2. **Disable Lambda Function** (`enable_lambda_export = false`)
+   - Achieves 100% automation for core cross-account access
+   - No manual steps required after initial Lake Formation admin setup
+
+**Everything infrastructure-related is fully automated via Terraform - only AWS service limitations require manual intervention!**
 
 ## 🎯 What This Project Does
 
