@@ -1,5 +1,7 @@
 # Amazon Connect Cross-Account Analytics with Terraform
 
+**Why Lake Formation?** Alternative approaches were considered including direct IAM role assumption in the producer account, but this is not feasible for Amazon Connect Analytics Data Lake. The data lake infrastructure (S3 buckets, Glue databases, and tables) is owned by an AWS service account that customers cannot access or assume roles against. Lake Formation is the only supported mechanism for cross-account access to Amazon Connect analytics data, making it the mandatory architectural pattern for this use case.
+
 A complete Terraform solution for setting up cross-account access to Amazon Connect Analytics Data Lake, enabling secure data sharing between AWS accounts without data duplication.
 
 ## ⚠️ Important: Manual Steps Required
