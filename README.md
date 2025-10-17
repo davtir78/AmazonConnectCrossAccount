@@ -636,6 +636,60 @@ To export comprehensive metadata for all tables (including column names, data ty
 - Resource links must be created (via Terraform deployment)
 - Optional: `jq` for better JSON parsing (script works without it)
 
+### Installing jq on Windows
+
+**Option 1: Using Chocolatey (Recommended)**
+```bash
+# Install Chocolatey (if not already installed)
+# Run PowerShell as Administrator and run:
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Install jq
+choco install jq
+
+# Verify installation
+jq --version
+```
+
+**Option 2: Using Scoop**
+```bash
+# Install Scoop (if not already installed)
+# Run PowerShell and run:
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+irm get.scoop.sh | iex
+
+# Install jq
+scoop install jq
+
+# Verify installation
+jq --version
+```
+
+**Option 3: Manual Download**
+1. Go to https://stedolan.github.io/jq/download/
+2. Download the latest `jq-win64.exe`
+3. Rename it to `jq.exe`
+4. Move it to a directory in your PATH (e.g., `C:\Windows\System32\`)
+5. Open a new Command Prompt or PowerShell and verify:
+   ```bash
+   jq --version
+   ```
+
+**Option 4: Using Git Bash**
+If you're using Git Bash (which comes with Git for Windows), jq is often included:
+```bash
+# In Git Bash
+jq --version
+```
+
+**Why Install jq?**
+- **Better JSON Parsing**: More reliable extraction of column information
+- **Cleaner Output**: Proper handling of special characters and formatting
+- **Error Handling**: Better error messages for malformed JSON
+- **Performance**: Faster processing of large JSON responses
+
+**Note**: The script works perfectly without jq, but installing it provides more robust and accurate metadata extraction.
+
 **Customization:**
 - Edit the `TABLES` array in `export_table_metadata.sh` to add/remove tables
 - Modify `CONSUMER_DATABASE` and `REGION` variables if needed
