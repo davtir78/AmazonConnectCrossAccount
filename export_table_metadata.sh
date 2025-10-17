@@ -201,7 +201,13 @@ extract_table_metadata() {
         --output json 2>/dev/null)
     
     if [ $? -ne 0 ] || [ -z "$table_json" ]; then
-        print_warning "Could not retrieve metadata for table: $table_name"
+        print_warning "Could not retrieve metadata for table: $table_name (resource link: $resource_link_name)"
+        return 1
+    fi
+    
+    # Check if the table JSON contains valid data
+    if ! echo "$table_json" | jq -e '.Table' > /dev/null 2>&1; then
+        print_warning "Invalid table metadata for: $table_name (resource link: $resource_link_name)"
         return 1
     fi
     
@@ -223,7 +229,10 @@ extract_table_metadata() {
     # Extract partition keys
     local partition_keys=""
     if [ "$JQ_AVAILABLE" = true ]; then
-        partition_keys=$(echo "$table_json" | jq -r '.Table.PartitionKeys[].Name // empty' | tr '\n' ',' | sed 's/,$//')
+        # Check if PartitionKeys exists and is not null
+        if echo "$table_json" | jq -e '.Table.PartitionKeys' > /dev/null 2>&1; then
+            partition_keys=$(echo "$table_json" | jq -r '.Table.PartitionKeys[].Name // empty' 2>/dev/null | tr '\n' ',' | sed 's/,$//' || echo "")
+        fi
     else
         partition_keys=$(echo "$table_json" | grep -A 10 '"PartitionKeys"' | grep '"Name"' | cut -d'"' -f4 | tr '\n' ',' | sed 's/,$//')
     fi
@@ -232,6 +241,19 @@ extract_table_metadata() {
     local temp_file="/tmp/columns_$$.csv"
     
     if [ "$JQ_AVAILABLE" = true ]; then
+        # Check if columns array exists and is not empty
+        if ! echo "$table_json" | jq -e '.Table.StorageDescriptor.Columns' > /dev/null 2>&1; then
+            print_warning "No columns array found for table: $table_name"
+            return 1
+        fi
+        
+        # Check if columns array is not null and has elements
+        column_count=$(echo "$table_json" | jq '.Table.StorageDescriptor.Columns | length' 2>/dev/null || echo "0")
+        if [ "$column_count" -eq 0 ]; then
+            print_warning "No columns found for table: $table_name (empty table)"
+            return 1
+        fi
+        
         echo "$table_json" | jq -r '.Table.StorageDescriptor.Columns[] | [.Name, .Type, .Comment] | @csv' > "$temp_file"
     else
         # Fallback parsing without jq - extract columns using sed/awk
