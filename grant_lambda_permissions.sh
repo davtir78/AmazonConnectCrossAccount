@@ -1,11 +1,13 @@
 #!/bin/bash
 
 # Automated Lake Formation permissions for Lambda function
-# Grants DESCRIBE permission on all resource links to enable Lambda access
+# Grants DESCRIBE on database and DESCRIBE+SELECT on resource links
+# This creates the exact permissions shown in the AWS Console screenshot
 
 set -e
 
 # Configuration
+AWS_REGION="ap-southeast-2"
 CONSUMER_ACCOUNT_ID="657416661258"
 LAMBDA_ROLE_NAME="connect-analytics-lambda-execution-role"
 DATABASE_NAME="connect_analytics_consumer"
@@ -14,6 +16,7 @@ DATABASE_NAME="connect_analytics_consumer"
 LAMBDA_ROLE_ARN="arn:aws:iam::${CONSUMER_ACCOUNT_ID}:role/${LAMBDA_ROLE_NAME}"
 
 echo "=== Granting Lambda Permissions via CLI ==="
+echo "Region: ${AWS_REGION}"
 echo "Consumer Account: ${CONSUMER_ACCOUNT_ID}"
 echo "Lambda Role: ${LAMBDA_ROLE_ARN}"
 echo "Database: ${DATABASE_NAME}"
@@ -58,18 +61,40 @@ CONNECT_TABLES=(
 SUCCESS_COUNT=0
 FAILED_COUNT=0
 
-echo "Granting DESCRIBE permissions on all resource links..."
+# Step 1: Grant DESCRIBE on the database (creates first permission in screenshot)
+echo "Step 1: Granting DESCRIBE on database '${DATABASE_NAME}'..."
+if aws lakeformation grant-permissions \
+  --region "${AWS_REGION}" \
+  --principal DataLakePrincipalIdentifier="${LAMBDA_ROLE_ARN}" \
+  --permissions "DESCRIBE" \
+  --resource "{\"Database\":{\"Name\":\"${DATABASE_NAME}\"}}" \
+  --query "ResponseMetadata.HTTPStatusCode" \
+  --output text 2>/dev/null; then
+  
+  echo "✅ Database permission granted successfully"
+else
+  echo "❌ Failed to grant database permission"
+  exit 1
+fi
+
+echo ""
+echo "Step 2: Granting DESCRIBE+SELECT on resource links..."
+echo "This creates BOTH the 'SELECT' on target table and 'DESCRIBE' on resource link"
 echo ""
 
+# Step 2: Grant DESCRIBE and SELECT on each resource link
+# This single command creates BOTH the 'SELECT' on the target and 'DESCRIBE' on the link
 for table in "${CONNECT_TABLES[@]}"; do
   resource_link_name="${table}_link"
   
-  echo -n "Granting DESCRIBE on ${resource_link_name}... "
+  echo -n "Granting DESCRIBE+SELECT on ${resource_link_name}... "
   
-  # Grant DESCRIBE permission on the resource link
+  # Grant both DESCRIBE and SELECT permissions on the resource link
+  # This automatically creates the cross-account SELECT permission on the target table
   if aws lakeformation grant-permissions \
+    --region "${AWS_REGION}" \
     --principal DataLakePrincipalIdentifier="${LAMBDA_ROLE_ARN}" \
-    --permissions "DESCRIBE" \
+    --permissions "DESCRIBE" "SELECT" \
     --resource "{\"Table\":{\"DatabaseName\":\"${DATABASE_NAME}\",\"Name\":\"${resource_link_name}\"}}" \
     --query "ResponseMetadata.HTTPStatusCode" \
     --output text 2>/dev/null; then
