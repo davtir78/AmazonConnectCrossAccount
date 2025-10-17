@@ -220,3 +220,193 @@ variable "producer_kms_key_id" {
   type        = string
   default     = ""
 }
+
+# =============================================================================
+# ENHANCED AUTOMATION VARIABLES
+# =============================================================================
+
+variable "lambda_role_name" {
+  description = "Name of the Lambda execution role for cross-account access"
+  type        = string
+  default     = "connect-analytics-lambda-execution-role"
+}
+
+variable "enable_producer_permissions" {
+  description = "Enable automated producer account SELECT permissions"
+  type        = bool
+  default     = true
+}
+
+variable "enable_ram_shares" {
+  description = "Enable RAM share automation for cross-account resource sharing"
+  type        = bool
+  default     = false
+}
+
+variable "auto_accept_ram_shares" {
+  description = "Automatically accept RAM shares (governance consideration)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_integration_tests" {
+  description = "Run automated integration tests"
+  type        = bool
+  default     = true
+}
+
+variable "validate_permissions" {
+  description = "Validate Lake Formation permissions after creation"
+  type        = bool
+  default     = true
+}
+
+variable "validate_ram_shares" {
+  description = "Validate RAM share setup and access"
+  type        = bool
+  default     = true
+}
+
+# =============================================================================
+# ADVANCED PERMISSIONS VARIABLES
+# =============================================================================
+
+variable "grant_database_access" {
+  description = "Grant database-level DESCRIBE permissions in producer account"
+  type        = bool
+  default     = false
+}
+
+variable "enable_column_level_permissions" {
+  description = "Enable fine-grained column-level permissions"
+  type        = bool
+  default     = false
+}
+
+variable "use_lf_tag_permissions" {
+  description = "Use LF-Tag based permissions instead of table-level"
+  type        = bool
+  default     = false
+}
+
+variable "use_consumer_lf_tags" {
+  description = "Use LF-Tag permissions in consumer account"
+  type        = bool
+  default     = false
+}
+
+variable "tables_with_column_restrictions" {
+  description = "List of tables that need column-level access restrictions"
+  type        = list(string)
+  default     = []
+}
+
+variable "column_permissions" {
+  description = "Column-level permissions mapping (table -> [columns])"
+  type        = map(list(string))
+  default     = {}
+}
+
+# =============================================================================
+# CONSUMER LF-TAG VARIABLES
+# =============================================================================
+
+variable "consumer_lf_tag_key" {
+  description = "Lake Formation LF-Tag key for consumer account"
+  type        = string
+  default     = "access_level"
+}
+
+variable "consumer_lf_tag_values" {
+  description = "LF-Tag values for consumer account permissions"
+  type        = list(string)
+  default     = ["read_only"]
+}
+
+# =============================================================================
+# RATE LIMITING AND THROTTLING
+# =============================================================================
+
+variable "enable_rate_limiting" {
+  description = "Enable rate limiting for API calls to avoid throttling"
+  type        = bool
+  default     = true
+}
+
+variable "api_call_delay_seconds" {
+  description = "Delay between API calls to prevent rate limiting"
+  type        = number
+  default     = 1
+}
+
+variable "max_retries" {
+  description = "Maximum retries for failed API operations"
+  type        = number
+  default     = 3
+}
+
+# =============================================================================
+# MONITORING AND LOGGING
+# =============================================================================
+
+variable "enable_cloudwatch_logging" {
+  description = "Enable CloudWatch logging for Lake Formation operations"
+  type        = bool
+  default     = true
+}
+
+variable "log_retention_days" {
+  description = "Retention period for CloudWatch logs"
+  type        = number
+  default     = 30
+}
+
+variable "enable_detailed_monitoring" {
+  description = "Enable detailed CloudWatch metrics and monitoring"
+  type        = bool
+  default     = false
+}
+
+# =============================================================================
+# SECURITY AND COMPLIANCE
+# =============================================================================
+
+variable "require_mfa_delete" {
+  description = "Require MFA for deleting Lake Formation permissions"
+  type        = bool
+  default     = false
+}
+
+variable "enable_permission auditing" {
+  description = "Enable detailed permission change auditing"
+  type        = bool
+  default     = true
+}
+
+variable "permission_audit_retention_days" {
+  description = "Retention period for permission audit logs"
+  type        = number
+  default     = 90
+}
+
+# =============================================================================
+# PERFORMANCE OPTIMIZATION
+# =============================================================================
+
+variable "enable_parallel_processing" {
+  description = "Enable parallel processing of resource creation"
+  type        = bool
+  default     = true
+}
+
+variable "batch_size" {
+  description = "Batch size for processing multiple resources"
+  type        = number
+  default     = 10
+}
+
+variable "timeout_minutes" {
+  description = "Timeout for long-running operations"
+  type        = number
+  default     = 60
+}
