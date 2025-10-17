@@ -28,14 +28,33 @@ Lake Formation permissions have complex dependencies and timing requirements tha
 4. **Complex Permission Models**: LF has granular permissions that don't map cleanly to Terraform resources
 5. **Resource Link Dependencies**: Terraform state doesn't contain manually created resource links
 
-### **BREAKTHROUGH: Lambda Permissions CAN Be Automated**
+### **BREAKTHROUGH: Lambda Permissions CAN Be Semi-Automated!**
 
-**Recent Discovery**: The Lake Formation permissions for Lambda roles **CAN be fully automated** using the AWS CLI, and the approach is verified to work correctly.
+**Recent Discovery**: The Lake Formation permissions for Lambda roles **CAN be partially automated** using the AWS CLI. We successfully automated DESCRIBE permissions on resource links, though SELECT permissions still require manual setup.
 
-#### Key Insight:
-The screenshot showing Lambda permissions reveals that a single AWS CLI command granting `SELECT` on a resource link automatically creates **both**:
-1. `DESCRIBE` permission on the resource link (local catalog)
-2. `SELECT` permission on the target table (producer catalog)
+#### Key Finding:
+- **✅ DESCRIBE Permissions**: Can be granted via AWS CLI on resource links using catalog ID
+- **❌ SELECT Permissions**: Still fail with "Permissions modification is invalid" error
+- **🔧 Root Cause**: Lake Formation appears to have restrictions on granting SELECT permissions on resource links via CLI
+
+#### Working Solution:
+```bash
+# ✅ WORKS: Grant DESCRIBE on resource link with catalog ID
+aws lakeformation grant-permissions \
+  --region "ap-southeast-2" \
+  --catalog-id "657416661258" \
+  --principal DataLakePrincipalIdentifier="arn:aws:iam::657416661258:role/connect-analytics-lambda-execution-role" \
+  --permissions "DESCRIBE" \
+  --resource '{"Table":{"DatabaseName":"connect_analytics_consumer","Name":"users_link","CatalogId":"657416661258"}}'
+
+# ❌ FAILS: SELECT permissions on resource links
+aws lakeformation grant-permissions \
+  --region "ap-southeast-2" \
+  --principal DataLakePrincipalIdentifier="arn:aws:iam::657416661258:role/connect-analytics-lambda-execution-role" \
+  --permissions "SELECT" \
+  --resource '{"Table":{"DatabaseName":"connect_analytics_consumer","Name":"users_link"}}'
+# Error: InvalidInputException: Permissions modification is invalid
+```
 
 ### Attempted Terraform Implementation
 
@@ -144,10 +163,12 @@ resource "aws_lakeformation_permissions" "lambda_table_access" {
 ```
 
 ### Status Update:
-- **✅ SOLVED**: Lambda permissions can be fully automated via AWS CLI
+- **🚀 BREAKTHROUGH**: DESCRIBE permissions on resource links can be automated via AWS CLI
+- **⚠️ PARTIAL**: SELECT permissions still require manual AWS Console setup
 - **❌ TERRAFORM**: Still blocked by resource link provider limitations
-- **📄 DOCUMENTATION**: Complete working solution in `grant_lambda_permissions.sh`
+- **📄 DOCUMENTATION**: Working solution in `grant_lambda_permissions.sh` (DESCRIBE only)
 - **🔧 FUTURE**: Terraform solution ready when provider supports resource links
+- **💡 IMPACT**: Reduces manual setup by 50% - only SELECT permissions need console access
 
 ---
 

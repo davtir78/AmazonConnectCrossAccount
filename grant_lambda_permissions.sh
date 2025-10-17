@@ -82,20 +82,22 @@ echo "Step 2: Granting DESCRIBE+SELECT on resource links..."
 echo "This creates BOTH the 'SELECT' on target table and 'DESCRIBE' on resource link"
 echo ""
 
-# Step 2: Grant DESCRIBE and SELECT on each resource link
-# This single command creates BOTH the 'SELECT' on the target and 'DESCRIBE' on the link
+# Step 2: Grant DESCRIBE on each resource link
+# NOTE: SELECT permissions on resource links currently fail with "Permissions modification is invalid"
+# This appears to be a Lake Formation limitation with resource links
 for table in "${CONNECT_TABLES[@]}"; do
   resource_link_name="${table}_link"
   
-  echo -n "Granting DESCRIBE+SELECT on ${resource_link_name}... "
+  echo -n "Granting DESCRIBE on ${resource_link_name}... "
   
-  # Grant both DESCRIBE and SELECT permissions on the resource link
-  # This automatically creates the cross-account SELECT permission on the target table
+  # Grant DESCRIBE permission on the resource link with catalog ID
+  # SELECT permissions need to be granted manually via AWS Console for now
   if aws lakeformation grant-permissions \
     --region "${AWS_REGION}" \
+    --catalog-id "${CONSUMER_ACCOUNT_ID}" \
     --principal DataLakePrincipalIdentifier="${LAMBDA_ROLE_ARN}" \
-    --permissions "DESCRIBE" "SELECT" \
-    --resource "{\"Table\":{\"DatabaseName\":\"${DATABASE_NAME}\",\"Name\":\"${resource_link_name}\"}}" \
+    --permissions "DESCRIBE" \
+    --resource "{\"Table\":{\"DatabaseName\":\"${DATABASE_NAME}\",\"Name\":\"${resource_link_name}\",\"CatalogId\":\"${CONSUMER_ACCOUNT_ID}\"}}" \
     --query "ResponseMetadata.HTTPStatusCode" \
     --output text 2>/dev/null; then
     
