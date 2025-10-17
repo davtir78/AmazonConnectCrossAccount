@@ -28,7 +28,7 @@
 #   - Outbound Campaigns (1 table)
 #   - Staff Scheduling (11 tables)
 
-set -e
+#set -e
 
 # Colors for output
 RED='\033[0;31m'
