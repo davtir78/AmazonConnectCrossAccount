@@ -638,7 +638,16 @@ To export comprehensive metadata for all tables (including column names, data ty
 
 ### Installing jq on Windows
 
-**Option 1: Using Chocolatey (Recommended)**
+**Option 1: Using winget (Easiest - Windows 10/11)**
+```bash
+# Install jq using Windows Package Manager
+winget install jqlang.jq
+
+# Verify installation
+jq --version
+```
+
+**Option 2: Using Chocolatey**
 ```bash
 # Install Chocolatey (if not already installed)
 # Run PowerShell as Administrator and run:
@@ -651,7 +660,7 @@ choco install jq
 jq --version
 ```
 
-**Option 2: Using Scoop**
+**Option 3: Using Scoop**
 ```bash
 # Install Scoop (if not already installed)
 # Run PowerShell and run:
@@ -665,7 +674,7 @@ scoop install jq
 jq --version
 ```
 
-**Option 3: Manual Download**
+**Option 4: Manual Download**
 1. Go to https://stedolan.github.io/jq/download/
 2. Download the latest `jq-win64.exe`
 3. Rename it to `jq.exe`
@@ -675,7 +684,7 @@ jq --version
    jq --version
    ```
 
-**Option 4: Using Git Bash**
+**Option 5: Using Git Bash**
 If you're using Git Bash (which comes with Git for Windows), jq is often included:
 ```bash
 # In Git Bash

@@ -228,23 +228,11 @@ extract_table_metadata() {
         partition_keys=$(echo "$table_json" | grep -A 10 '"PartitionKeys"' | grep '"Name"' | cut -d'"' -f4 | tr '\n' ',' | sed 's/,$//')
     fi
     
-    # Process columns
+    # Process columns - use temporary file to avoid subshell issues
+    local temp_file="/tmp/columns_$$.csv"
+    
     if [ "$JQ_AVAILABLE" = true ]; then
-        echo "$table_json" | jq -r '.Table.StorageDescriptor.Columns[] | [.Name, .Type, .Comment] | @csv' | while IFS= read -r column_line; do
-            # Remove quotes and parse column info
-            column_name=$(echo "$column_line" | cut -d',' -f1 | tr -d '"')
-            column_type=$(echo "$column_line" | cut -d',' -f2 | tr -d '"')
-            column_comment=$(echo "$column_line" | cut -d',' -f3 | tr -d '"')
-            
-            # Check if this is a partition key
-            is_partition_key="NO"
-            if [[ "$partition_keys" == *"$column_name"* ]]; then
-                is_partition_key="YES"
-            fi
-            
-            # Write to CSV
-            echo "\"$table_name\",\"$column_name\",\"$column_type\",\"$column_comment\",\"$is_partition_key\",\"$table_location\",\"$table_type\",\"$last_updated\",\"$table_description\"" >> "$OUTPUT_FILE"
-        done
+        echo "$table_json" | jq -r '.Table.StorageDescriptor.Columns[] | [.Name, .Type, .Comment] | @csv' > "$temp_file"
     else
         # Fallback parsing without jq - extract columns using sed/awk
         echo "$table_json" | sed -n '/"Columns":/,/]/p' | sed '1d;$d' | while IFS= read -r column_line; do
@@ -271,16 +259,33 @@ extract_table_metadata() {
                 column_comment=""
             fi
             
-            # Check if this is a partition key
-            is_partition_key="NO"
-            if [[ "$partition_keys" == *"$column_name"* ]]; then
-                is_partition_key="YES"
-            fi
-            
-            # Write to CSV
-            echo "\"$table_name\",\"$column_name\",\"$column_type\",\"$column_comment\",\"$is_partition_key\",\"$table_location\",\"$table_type\",\"$last_updated\",\"$table_description\"" >> "$OUTPUT_FILE"
-        done
+            # Output CSV line
+            echo "\"$column_name\",\"$column_type\",\"$column_comment\""
+        done > "$temp_file"
     fi
+    
+    # Process columns from temporary file
+    while IFS= read -r column_line; do
+        # Skip empty lines
+        [ -z "$column_line" ] && continue
+        
+        # Parse column info
+        column_name=$(echo "$column_line" | cut -d',' -f1 | tr -d '"')
+        column_type=$(echo "$column_line" | cut -d',' -f2 | tr -d '"')
+        column_comment=$(echo "$column_line" | cut -d',' -f3 | tr -d '"')
+        
+        # Check if this is a partition key
+        is_partition_key="NO"
+        if [[ "$partition_keys" == *"$column_name"* ]]; then
+            is_partition_key="YES"
+        fi
+        
+        # Write to CSV
+        echo "\"$table_name\",\"$column_name\",\"$column_type\",\"$column_comment\",\"$is_partition_key\",\"$table_location\",\"$table_type\",\"$last_updated\",\"$table_description\"" >> "$OUTPUT_FILE"
+    done < "$temp_file"
+    
+    # Clean up temporary file
+    rm -f "$temp_file"
     
     print_success "Processed table: $table_name"
     return 0
