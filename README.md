@@ -4,12 +4,12 @@ A Terraform-based solution for setting up cross-account Amazon Connect analytics
 
 ## Overview
 
-This project enables secure cross-account access to Amazon Connect data from a producer account (502851453563) to a consumer account (657416661258) using Lake Formation resource links and proper permission management.
+This project enables secure cross-account access to Amazon Connect data from a producer account to a consumer account using Lake Formation resource links and proper permission management.
 
 ## Architecture
 
 ```
-PRODUCER ACCOUNT (502851453563)
+PRODUCER ACCOUNT
 ├── connect_datalake Database
 │   ├── users Table
 │   ├── contacts Table
@@ -18,7 +18,7 @@ PRODUCER ACCOUNT (502851453563)
 └── Lake Formation Permissions
     └── SELECT on target tables for consumer Lambda role
 
-CONSUMER ACCOUNT (657416661258)
+CONSUMER ACCOUNT
 ├── connect_analytics_consumer Database
 │   ├── users_link ← Resource Link
 │   ├── contacts_link ← Resource Link
@@ -46,8 +46,8 @@ Create `terraform.tfvars`:
 
 ```hcl
 # Account Configuration
-producer_account_id = "502851453563"
-consumer_account_id = "657416661258"
+producer_account_id = "PRODUCER_ACCOUNT_ID"
+consumer_account_id = "CONSUMER_ACCOUNT_ID"
 
 # Database Configuration
 producer_database_name = "connect_datalake"
@@ -122,11 +122,11 @@ terraform apply -var-file=terraform.tfvars
 
 This implementation uses the correct Lake Formation permission model:
 
-### Consumer Account (657416661258)
+### Consumer Account
 - **DESCRIBE** permissions on resource links
 - Allows metadata access to linked tables
 
-### Producer Account (502851453563)
+### Producer Account
 - **SELECT** permissions on target tables
 - Allows data access through resource links
 
@@ -191,7 +191,7 @@ aws athena start-query-execution \
 ```bash
 # Consumer permissions
 aws lakeformation list-permissions \
-  --principal "DataLakePrincipalIdentifier=arn:aws:iam::657416661258:role/connect-analytics-lambda-execution-role"
+  --principal "DataLakePrincipalIdentifier=arn:aws:iam::CONSUMER_ACCOUNT_ID:role/connect-analytics-lambda-execution-role"
 ```
 
 ## Lambda Export Function
@@ -314,7 +314,7 @@ aws sts get-caller-identity
 aws glue get-databases --query "DatabaseList[].Name"
 
 # List Lake Formation permissions
-aws lakeformation list-permissions --principal "DataLakePrincipalIdentifier=arn:aws:iam::657416661258:role/connect-analytics-lambda-execution-role"
+aws lakeformation list-permissions --principal "DataLakePrincipalIdentifier=arn:aws:iam::CONSUMER_ACCOUNT_ID:role/connect-analytics-lambda-execution-role"
 
 # Test Athena query
 aws athena start-query-execution --work-group connect_analytics_workgroup --query-string "SELECT 1"

@@ -7,7 +7,7 @@
 variable "producer_account_id" {
   description = "AWS Account ID of the producer account (where Amazon Connect data resides)"
   type        = string
-  # Example: "502851453563"
+  # Example: "PRODUCER_ACCOUNT_ID"
   # This account contains the Amazon Connect instance and data lake
 }
 
