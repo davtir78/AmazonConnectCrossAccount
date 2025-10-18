@@ -150,9 +150,9 @@ variable "enable_lake_formation" {
 # =============================================================================
 
 variable "enable_lambda_export" {
-  description = "Enable Lambda function for automated users export"
+  description = "Enable Lambda function for automated data export"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "lambda_schedule_expression" {
@@ -225,16 +225,16 @@ variable "producer_kms_key_id" {
 # ENHANCED AUTOMATION VARIABLES
 # =============================================================================
 
-variable "lambda_role_name" {
-  description = "Name of the Lambda execution role for cross-account access"
-  type        = string
-  default     = "connect-analytics-lambda-execution-role"
-}
-
 variable "enable_producer_permissions" {
-  description = "Enable automated producer account SELECT permissions"
+  description = "Enable SELECT permissions on producer account target tables"
   type        = bool
   default     = true
+}
+
+variable "lambda_role_name" {
+  description = "Name of the Lambda execution role"
+  type        = string
+  default     = "connect-analytics-lambda-execution-role"
 }
 
 variable "enable_ram_shares" {

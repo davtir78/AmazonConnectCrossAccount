@@ -151,7 +151,58 @@ resource "aws_iam_role_policy" "lambda_lake_formation_policy" {
   })
 }
 
-# Note: Lake Formation admin permissions will be handled manually via AWS CLI
+# -----------------------------------------------------------------------------
+# Producer Account SELECT Permissions on Target Tables
+# -----------------------------------------------------------------------------
+# These permissions grant SELECT access to the actual target tables in the producer account
+# This is the critical missing piece for cross-account data access
+
+resource "aws_lakeformation_permissions" "producer_select_permissions" {
+  for_each = var.enable_producer_permissions ? toset(var.connect_tables) : toset([])
+  provider = aws.producer
+  
+  permissions = ["SELECT"]
+  
+  principal = "arn:aws:iam::${var.consumer_account_id}:role/${var.lambda_role_name}"
+  
+  table {
+    catalog_id    = var.producer_account_id
+    database_name = var.producer_database_name
+    name          = each.key
+  }
+  
+  depends_on = [
+    aws_iam_role.lambda_role
+  ]
+}
+
+# -----------------------------------------------------------------------------
+# Consumer Account DESCRIBE Permissions on Resource Links
+# -----------------------------------------------------------------------------
+# These permissions grant DESCRIBE access to the resource links in the consumer account
+# This allows metadata access to the linked tables
+
+resource "aws_lakeformation_permissions" "consumer_describe_permissions" {
+  for_each = var.enable_resource_links ? toset(var.connect_tables) : toset([])
+  provider = aws.consumer
+  
+  permissions = ["DESCRIBE"]
+  
+  principal = aws_iam_role.lambda_role[0].arn
+  
+  table {
+    catalog_id    = local.consumer_account_id
+    database_name = var.consumer_database_name
+    name          = "${each.key}_link"
+  }
+  
+  depends_on = [
+    aws_iam_role.lambda_role,
+    aws_glue_catalog_table.resource_links
+  ]
+}
+
+# Note: Lake Formation admin permissions will be handled manually via AWS CLI if needed
 
 # -----------------------------------------------------------------------------
 # Lake Formation Database Permissions for Lambda Role
